@@ -1,0 +1,26 @@
+---
+  - name: Set Artifactory artifact name
+    set_fact: artifact_name=jfrog-artifactory-oss-4.15.0.deb
+
+  - name: Download Artifactory
+    get_url:
+      url: https://bintray.com/artifact/download/jfrog/artifactory-debs/pool/main/j/jfrog-artifactory-oss-deb/{{ artifact_name }}
+      dest: /home/droplet-user/
+
+  - name: Add gpg key
+    apt_key: keyserver=pgpkeys.mit.edu id=6B219DCCD7639232
+
+  - name: Install Artifactory
+    shell: dpkg -i /home/droplet-user/{{ artifact_name }}
+
+#  - name: Copy artifactory.ini to /etc/supervisor.d/artifactory.ini
+#    copy: src=artifactory.ini dest=/etc/supervisor.d/artifactory.ini mode=0755
+
+#  - name: Add Artifactory to supervisord
+#    supervisorctl: name=artifactory state=present
+
+  - name: Update iptables rules to allow requests on port 8081
+    iptables: action=insert chain=INPUT protocol=tcp destination_port=8081 jump=ACCEPT
+
+  - name: Persist the updated iptables rules
+    shell: invoke-rc.d netfilter-persistent save
